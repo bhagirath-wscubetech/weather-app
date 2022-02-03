@@ -36,7 +36,7 @@ function App() {
     },
     []
   )
-  
+
 
   useEffect(
     () => {
@@ -91,7 +91,7 @@ function App() {
           ?
           <Login handler={googleLoginHandler} />
           :
-          <Weather/>
+          <Weather />
       }
     </>
   );
