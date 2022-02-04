@@ -3,18 +3,25 @@ import React from 'react';
 import Container from './Container';
 import Loading from './Loading';
 import axios from 'axios';
+import RecentBox from './RecentBox';
 export default function Weather() {
     const [data, setData] = useState([]);
     const [lat, setLat] = useState("");
     const [long, setLong] = useState("");
     const [city, setCity] = useState("");
-
+    const [recent, setRecent] = useState([]);
     let icon;
     const cityNameInput = useRef();
     const errorBox = useRef()
     useEffect(
         () => {
-            getLocation();
+            getLocation()
+            let localRecent = localStorage.getItem("localRecent");
+            if (localRecent !== "") {
+                localRecent = JSON.parse(localRecent);
+                setRecent(localRecent);
+            }
+
             // getData();
         },
         []
@@ -24,6 +31,15 @@ export default function Weather() {
             getData(0)
         },
         [lat, long]
+    )
+
+    useEffect(
+        () => {
+            if (data.length !== 0) {
+                storeRecent(data)
+            }
+        },
+        [data]
     )
     const getLocation = () => {
         navigator.geolocation.getCurrentPosition(
@@ -36,6 +52,10 @@ export default function Weather() {
             }
         )
     }
+    const researchRecent = (lat, lon) => {
+        setLat(lat)
+        setLong(lon)
+    }
     const cityNameHandler = (event) => {
         setCity(event.target.value);
     }
@@ -43,6 +63,29 @@ export default function Weather() {
         const icon = data.weather[0].icon;
         return <img src={`http://openweathermap.org/img/wn/${icon}@2x.png`} alt="" />
     }
+    const storeRecent = (data) => {
+        const flag = recent.some(
+            (recentItem) => {
+                return (recentItem.lat === data.coord.lat) && (recentItem.lon === data.coord.lon)
+            }
+        )
+        if (!flag) {
+            const obj = {
+                name: data.name,
+                lat: data.coord.lat,
+                lon: data.coord.lon
+            }
+            const newRecent = recent;
+            newRecent.push(obj)
+            setRecent(newRecent)
+            localRecent()
+        }
+
+    }
+    const localRecent = () => {
+        localStorage.setItem("localRecent", JSON.stringify(recent))
+    }
+    // if(recent.length > )
     const getData = async (cityFlag) => {
         if (cityFlag === 1) {
             axios.get(
@@ -50,8 +93,9 @@ export default function Weather() {
             ).then(
                 (res) => {
                     // console.log(res);
-                    setCity(res.data.name)
-                    setData(res.data);
+                    const apiRes = res.data;
+                    setCity(apiRes.name)
+                    setData(apiRes)
                     createError("")
                 }
             ).catch(
@@ -138,6 +182,7 @@ export default function Weather() {
                                 </div>
                             </div>
                         </Container>
+                        <RecentBox recentData={recent} handler={researchRecent} />
                     </>
             }
         </>);

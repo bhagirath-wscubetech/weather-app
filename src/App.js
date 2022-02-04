@@ -59,6 +59,7 @@ function App() {
   const logout = () => {
     localStorage.removeItem("userData");
     localStorage.removeItem("loginAt");
+    localStorage.removeItem("localRecent");
   }
 
   const googleLoginHandler = () => {
