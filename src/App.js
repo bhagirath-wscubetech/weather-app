@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import { initializeApp } from "firebase/app";
 import Login from "./Components/Login";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { getDatabase, ref, set, onValue } from "firebase/database";
 import Weather from "./Components/Weather";
-
+import { v4 as uuidv4 } from 'uuid'
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -36,8 +37,6 @@ function App() {
     },
     []
   )
-
-
   useEffect(
     () => {
       const userData = localStorage.getItem("userData");
@@ -55,6 +54,17 @@ function App() {
     },
     []
   )
+  const addRecentToDb = (data) => {
+    const db = getDatabase(app)
+    const id = uuidv4()
+    // console.log(user.email);
+    // return 
+    // console.log("addRecentToDb", data);
+    set(ref(db, 'recents/' + id), {
+      email: user.email,
+      recentData: data
+    });
+  }
 
   const logout = () => {
     localStorage.removeItem("userData");
@@ -85,14 +95,37 @@ function App() {
       });
   }
 
+  const readData = () => {
+    const db = getDatabase();
+    const starCountRef = ref(db, 'recents');
+    onValue(starCountRef, (snapshot) => {
+      const data = snapshot.val();
+      const dataObj = Object.values(data)
+      console.log(dataObj);
+      const filteredData = dataObj.filter(
+        (d) => {
+          return d.email === user.email
+        }
+      )
+      console.log(filteredData);
+    });
+  }
+
   return (
     <>
-      {
-        user.length === 0
-          ?
-          <Login handler={googleLoginHandler} />
-          :
-          <Weather />
+      <button className="btn btn-danger"
+        onClick={
+          readData
+        } > Read </button> {
+        user.length === 0 ?
+          <Login handler={
+            googleLoginHandler
+          }
+          /> :
+          <Weather recentDbHandler={
+            addRecentToDb
+          }
+          />
       }
     </>
   );

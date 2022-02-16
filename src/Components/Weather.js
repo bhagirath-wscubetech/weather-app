@@ -4,7 +4,7 @@ import Container from './Container';
 import Loading from './Loading';
 import axios from 'axios';
 import RecentBox from './RecentBox';
-export default function Weather() {
+export default function Weather(props) {
     const [data, setData] = useState([]);
     const [lat, setLat] = useState("");
     const [long, setLong] = useState("");
@@ -17,7 +17,7 @@ export default function Weather() {
         () => {
             getLocation()
             let localRecent = localStorage.getItem("localRecent");
-            if (localRecent !== "") {
+            if (localRecent !== null) {
                 localRecent = JSON.parse(localRecent);
                 setRecent(localRecent);
             }
@@ -69,18 +69,18 @@ export default function Weather() {
                 return (recentItem.lat === data.coord.lat) && (recentItem.lon === data.coord.lon)
             }
         )
+        const obj = {
+            name: data.name,
+            lat: data.coord.lat,
+            lon: data.coord.lon
+        }
         if (!flag) {
-            const obj = {
-                name: data.name,
-                lat: data.coord.lat,
-                lon: data.coord.lon
-            }
             const newRecent = recent;
             newRecent.push(obj)
             setRecent(newRecent)
             localRecent()
         }
-
+        props.recentDbHandler(obj);
     }
     const localRecent = () => {
         localStorage.setItem("localRecent", JSON.stringify(recent))
